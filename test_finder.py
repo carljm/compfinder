@@ -1,6 +1,95 @@
+import subprocess
+import sys
 import textwrap
 
-from finder import find_709_comps
+from finder import find_709_comps, find_709_comps_in_files
+
+
+def test_cli(tmp_path):
+    filepath = tmp_path / "file.py"
+    filepath.write_text(
+        textwrap.dedent(
+            """
+        x = 1
+        class C:
+            x = 2
+            [x for y in [1]]
+    """
+        )
+    )
+    res = subprocess.run(
+        [sys.executable, "-m", "finder", str(tmp_path)],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+    assert res.stderr == ""
+    assert res.stdout == textwrap.dedent(
+        f"""
+        {filepath}:
+            5 - x
+    """
+    )
+
+
+def test_in_dir(tmp_path):
+    file1 = tmp_path / "file1.py"
+    file2 = tmp_path / "file2.py"
+    sub = tmp_path / "d"
+    sub.mkdir()
+    file3 = sub / "file3.py"
+    txt = tmp_path / "file.txt"
+    txt.write_text("This is not Python.")
+    file1.write_text(
+        textwrap.dedent(
+            """
+        x1 = 1
+        class C:
+            x1 = 2
+            [x1 for y in [1]]
+    """
+        )
+    )
+    file2.write_text(
+        textwrap.dedent(
+            """
+        x2 = 1
+        class C:
+            x2 = 2
+            [x2 for y in [1]]
+    """
+        )
+    )
+    file3.write_text(
+        textwrap.dedent(
+            """
+        x3 = 1
+        class C:
+            x3 = 2
+            [x3 for y in [1]]
+    """
+        )
+    )
+    assert find_709_comps_in_files(tmp_path) == {
+        str(file1): [(5, "x1")],
+        str(file2): [(5, "x2")],
+        str(file3): [(5, "x3")],
+    }
+
+
+def test_in_file(tmp_path):
+    file_path = tmp_path / "code.py"
+    file_path.write_text(
+        textwrap.dedent(
+            """
+        incr = 1
+        class C:
+            incr = 2
+            [incr for x in [1]]
+    """
+        )
+    )
+    assert find_709_comps_in_files(file_path) == {str(file_path): [(5, "incr")]}
 
 
 def run(codestr: str) -> list[tuple[int, str]]:

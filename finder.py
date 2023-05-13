@@ -1,8 +1,32 @@
 import ast
 import builtins
+import sys
 
 from contextlib import contextmanager
-from typing import Generator, Sequence
+from pathlib import Path
+from typing import Iterable, Generator, Sequence
+
+
+def find_709_comps_in_files(path: Path):
+    paths: Iterable[Path]
+    if path.is_file():
+        paths = [path]
+    elif path.is_dir():
+        paths = path.glob("**/*.py")
+    return {str(p): find_709_comps_in_file(p) for p in paths}
+
+
+def find_709_comps_in_file(filepath: Path):
+    with filepath.open("r") as fh:
+        codestr = fh.read()
+        return find_709_comps(codestr)
+
+
+def find_709_comps(codestr: str) -> list[tuple[int, str]]:
+    tree = ast.parse(codestr)
+    finder = CompFinder()
+    finder.visit(tree)
+    return finder.problems
 
 
 class Scope:
@@ -187,8 +211,12 @@ class CompFinder(ast.NodeVisitor):
             self.visit(el)
 
 
-def find_709_comps(codestr: str) -> list[tuple[int, str]]:
-    tree = ast.parse(codestr)
-    finder = CompFinder()
-    finder.visit(tree)
-    return finder.problems
+if __name__ == "__main__":
+    results = {}
+    for path in sys.argv[1:]:
+        results.update(find_709_comps_in_files(Path(path)))
+    print()
+    for path, problems in results.items():
+        print(f"{path}:")
+        for lineno, varname in problems:
+            print(f"    {lineno} - {varname}")
