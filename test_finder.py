@@ -94,6 +94,12 @@ def test_in_file(tmp_path):
     assert find_709_comps_in_files(file_path) == {str(file_path): [(5, "incr")]}
 
 
+def test_bad_encoding(tmp_path):
+    file_path = tmp_path / "file.py"
+    file_path.write_bytes("foo".encode("utf16"))
+    assert find_709_comps_in_files(file_path) == {str(file_path): [(0, "Not UTF-8 encoded.")]}
+
+
 def run(codestr: str) -> list[tuple[int, str]]:
     return find_709_comps(textwrap.dedent(codestr))
 

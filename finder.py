@@ -18,7 +18,10 @@ def find_709_comps_in_files(path: Path):
 
 def find_709_comps_in_file(filepath: Path):
     with filepath.open("r") as fh:
-        codestr = fh.read()
+        try:
+            codestr = fh.read()
+        except UnicodeDecodeError:
+            return [(0, "Not UTF-8 encoded.")]
         return find_709_comps(codestr)
 
 
