@@ -23,7 +23,10 @@ def find_709_comps_in_file(filepath: Path):
 
 
 def find_709_comps(codestr: str) -> list[tuple[int, str]]:
-    tree = ast.parse(codestr)
+    try:
+        tree = ast.parse(codestr)
+    except SyntaxError:
+        return [(0, "Unable to parse file.")]
     finder = CompFinder()
     finder.visit(tree)
     return finder.problems

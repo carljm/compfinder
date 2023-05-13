@@ -332,3 +332,10 @@ def test_nested():
             [[incr for y in [2]] for x in [1]]
     """
     assert run(codestr) == [(5, "incr")]
+
+
+def test_bad_syntax():
+    codestr = """
+    foo = "
+    """
+    assert run(codestr) == [(0, "Unable to parse file.")]
