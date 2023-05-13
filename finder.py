@@ -217,6 +217,8 @@ if __name__ == "__main__":
         results.update(find_709_comps_in_files(Path(path)))
     print()
     for path, problems in results.items():
+        if not problems:
+            continue
         print(f"{path}:")
         for lineno, varname in problems:
             print(f"    {lineno} - {varname}")

@@ -6,17 +6,19 @@ from finder import find_709_comps, find_709_comps_in_files
 
 
 def test_cli(tmp_path):
-    filepath = tmp_path / "file.py"
-    filepath.write_text(
+    file1 = tmp_path / "file1.py"
+    file1.write_text(
         textwrap.dedent(
-            """
+        """
         x = 1
         class C:
             x = 2
             [x for y in [1]]
-    """
+        """
         )
     )
+    file2 = tmp_path / "file2.py"
+    file2.write_text("x = 1")
     res = subprocess.run(
         [sys.executable, "-m", "finder", str(tmp_path)],
         capture_output=True,
@@ -26,7 +28,7 @@ def test_cli(tmp_path):
     assert res.stderr == ""
     assert res.stdout == textwrap.dedent(
         f"""
-        {filepath}:
+        {file1}:
             5 - x
     """
     )
