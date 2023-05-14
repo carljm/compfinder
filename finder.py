@@ -13,7 +13,7 @@ def find_709_comps_in_files(path: Path):
         paths = [path]
     elif path.is_dir():
         paths = path.glob("**/*.py")
-    return {str(p): find_709_comps_in_file(p) for p in paths}
+    return {str(p): find_709_comps_in_file(p) for p in paths if p.is_file()}
 
 
 def find_709_comps_in_file(filepath: Path):
