@@ -30,6 +30,9 @@ def find_709_comps(codestr: str) -> list[tuple[int, str]]:
         tree = ast.parse(codestr)
     except SyntaxError:
         return [(0, "Unable to parse file.")]
+    except ValueError as e:
+        # Can happen if there are null bytes in the output
+        return [(0, f"Unable to parse file due to {e}.")
     finder = CompFinder()
     finder.visit(tree)
     return finder.problems
