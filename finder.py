@@ -33,7 +33,10 @@ def find_709_comps(codestr: str) -> list[tuple[int, str]]:
     except ValueError as e:
         return [(0, f"Unable to parse file ({e}).")]
     finder = CompFinder()
-    finder.visit(tree)
+    try:
+        finder.visit(tree)
+    except RecursionError as e:
+        return [(0, f"Recursion error ({e}).")]
     return finder.problems
 
 
