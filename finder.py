@@ -20,17 +20,15 @@ def find_709_comps_in_file(filepath: Path):
     with filepath.open("r") as fh:
         try:
             codestr = fh.read()
-        except UnicodeDecodeError:
-            return [(0, "Not UTF-8 encoded.")]
+        except UnicodeDecodeError as e:
+            return [(0, f"Could not decode file with default encoding ({e}).")]
         return find_709_comps(codestr)
 
 
 def find_709_comps(codestr: str) -> list[tuple[int, str]]:
     try:
         tree = ast.parse(codestr)
-    except SyntaxError:
-        return [(0, "Unable to parse file.")]
-    except ValueError as e:
+    except (SyntaxError, ValueError) as e:
         return [(0, f"Unable to parse file ({e}).")]
     finder = CompFinder()
     try:
