@@ -9,7 +9,7 @@ def test_cli(tmp_path):
     file1 = tmp_path / "file1.py"
     file1.write_text(
         textwrap.dedent(
-        """
+            """
         x = 1
         class C:
             x = 2
@@ -40,6 +40,8 @@ def test_in_dir(tmp_path):
     sub = tmp_path / "d"
     sub.mkdir()
     file3 = sub / "file3.py"
+    sub2 = tmp_path / "im_a_directory.py"
+    sub2.mkdir()
     txt = tmp_path / "file.txt"
     txt.write_text("This is not Python.")
     file1.write_text(
@@ -97,7 +99,27 @@ def test_in_file(tmp_path):
 def test_bad_encoding(tmp_path):
     file_path = tmp_path / "file.py"
     file_path.write_bytes("foo".encode("utf16"))
-    assert find_709_comps_in_files(file_path) == {str(file_path): [(0, "Not UTF-8 encoded.")]}
+    assert find_709_comps_in_files(file_path) == {
+        str(file_path): [
+            (
+                0,
+                "Could not decode file with default encoding ('utf-8' codec can't decode byte 0xff in position 0: invalid start byte).",
+            )
+        ]
+    }
+
+
+def test_bad_characters(tmp_path):
+    file_path = tmp_path / "file.py"
+    file_path.write_bytes(b"\x00\x00")
+    assert find_709_comps_in_files(file_path) == {
+        str(file_path): [
+            (
+                0,
+                "Unable to parse file (source code string cannot contain null bytes).",
+            )
+        ]
+    }
 
 
 def run(codestr: str) -> list[tuple[int, str]]:
@@ -344,4 +366,14 @@ def test_bad_syntax():
     codestr = """
     foo = "
     """
-    assert run(codestr) == [(0, "Unable to parse file.")]
+    assert run(codestr) == [
+        (
+            0,
+            "Unable to parse file (unterminated string literal (detected at line 2) (<unknown>, line 2)).",
+        )
+    ]
+
+
+def test_ast_too_nested():
+    codestr = f"a = 1\nb = a{' + a' * 1000}\n"
+    assert run(codestr) == [(0, "Recursion error (maximum recursion depth exceeded).")]
