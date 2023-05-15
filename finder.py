@@ -126,13 +126,7 @@ class CompFinder(ast.NodeVisitor):
         self.current_scope.delete(name)
 
     def resolve(self, name: str) -> Scope | None:
-        in_class = self.current_scope.is_class_scope()
-        if in_class:
-            # LOAD_NAME
-            scopes = [self.scopes[-1], self.scopes[1], self.scopes[0]]
-        else:
-            # LOAD_FAST / LOAD_DEREF / LOAD_GLOBAL
-            scopes = [s for s in reversed(self.scopes) if not s.is_class_scope()]
+        scopes = [self.current_scope, *[s for s in reversed(self.scopes) if not s.is_class_scope()]]
         for scope in scopes:
             if scope.is_bound(name):
                 return scope

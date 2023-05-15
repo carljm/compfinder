@@ -247,14 +247,14 @@ def test_found_conflicts_with_builtin():
     assert run(codestr) == [(4, "set")]
 
 
-def test_found_class_resolve_skips_to_globals():
+def test_load_deref():
     codestr = """
         def f():
             incr = 1
             class C:
                 [incr for x in [1]]
     """
-    assert run(codestr) == [(5, "incr")]
+    assert run(codestr) == []
 
 
 def test_found_in_if_clause():
